@@ -51,7 +51,7 @@ def summarization_intent(state: GlobalState) -> str:
     
     messages = state.get("messages", [])
     
-    if len(messages) > 6:
+    if len(messages) > 8:
         return "summarize_conversations"
     
     return "manager"
