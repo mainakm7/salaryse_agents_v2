@@ -59,8 +59,7 @@ workflow = StateGraph(GlobalState)
 workflow.add_node("chat", chat)
 workflow.set_entry_point("chat")
 workflow.add_edge("chat", END)
-inmemory = MemorySaver()
-chat_agent = workflow.compile(checkpointer=inmemory)
+chat_agent = workflow.compile()
 
 if __name__ == "__main__":
     query = "How are you today?"

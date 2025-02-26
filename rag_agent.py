@@ -60,8 +60,7 @@ async def generate(state: GlobalState) -> GlobalState:
     """
     query = state["query"]
     documents = state["documents"]
-    conversation_history = state.get("messages", [])
-
+    
     context = "\n\n".join(documents) if documents else "No relevant context available."
 
     prompt = PromptTemplate(
@@ -71,10 +70,8 @@ async def generate(state: GlobalState) -> GlobalState:
         Provide clear and concise answers with a maximum of 10 lines. 
         If the information is not available or unclear, respond with "I'm sorry, I don't have that information." 
         Tailor responses to maintain a professional and informative tone.
-        You can access the previous conversation history through the 'messages' key in the state.
 
         Query: {query}
-        Messages: {messages}
         Context: {context}
         Answer:
         <|eot_id|><|start_header_id|>assistant<|end_header_id|>""",
@@ -84,7 +81,7 @@ async def generate(state: GlobalState) -> GlobalState:
     rag_chain = prompt | llm | StrOutputParser()
 
     try:
-        generation = await rag_chain.ainvoke({"context": context, "query": query, "messages": conversation_history})
+        generation = await rag_chain.ainvoke({"context": context, "query": query})
     except Exception as e:
         generation = f"I'm sorry, an error occurred while generating the response: {str(e)}"
 
@@ -105,8 +102,7 @@ workflow.add_edge("retrieve", "generate")
 
 workflow.add_edge("generate", END)
 
-inmemory = MemorySaver()
-rag_agent = workflow.compile(checkpointer=inmemory)
+rag_agent = workflow.compile()
 
 if __name__ == "__main__":
     query = "RBL card blocked"

@@ -4,10 +4,13 @@ from langgraph.graph import add_messages, MessagesState
 
 class GlobalState(MessagesState):
   # messages: Annotated[List[AnyMessage], add_messages]
-  intent: str
+  intent: str = ""
   query: str
   context : str
   generation: Union[str, List[Any]]
   documents: List[str]
   summary: str
-  config: Dict[str, Any]
+  config: Dict[str, Any] = {}
+  user_info: Dict[str,Any] = {}
+  api: str = ""
+  api_intent: str = ""
