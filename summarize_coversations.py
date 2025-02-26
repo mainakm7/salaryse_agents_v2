@@ -22,7 +22,7 @@ async def summarize_conversations(state: GlobalState) -> GlobalState:
         You are an AI assistant proficient in summarizing conversation history.
         You will be provided with the conversation history and your task is to generate a concise summary.
         Ensure the summary captures the essence of the conversation and is clear and concise.
-        returm summary as a json object with the key 'summary'.
+        return summary as a json object with the key 'summary'.
         The previous conversation history can be accessed through the 'messages' key in the state.
 
         messages: {messages}
