@@ -56,7 +56,7 @@ async def init_memory():
 ss_agent = workflow.compile()
 
 if __name__ == "__main__":
-    query = "How do i check my credit score?"
+    query = "How do i check my credit card application status?"
     query_input = {"messages": [HumanMessage(content=query)], "query": query, "user_info": {"user_id": "740ad7d0-0b8c-4bde-a861-a97a5f2d3f52"}}
     config = {"configurable": {"thread_id": "1"}}
     
