@@ -43,7 +43,7 @@ async def summarize_conversations(state: GlobalState) -> GlobalState:
     updated_state = state.copy()
     updated_state["messages"] = updated_state.get("messages", []) + [AIMessage(content=summary)]
     
-    delete_messages = [RemoveMessage(id=m.id) for m in updated_state["messages"][:-4]]
+    delete_messages = [RemoveMessage(id=m.id) for m in updated_state["messages"][:-3]]
     
     return {"summary": summary, "messages": delete_messages}
 
@@ -52,7 +52,7 @@ def summarization_intent(state: GlobalState) -> str:
     
     messages = state.get("messages", [])
     
-    if len(messages) > 8:
+    if len(messages) > 7:
         return "summarize_conversations"
     
     return "manager"
