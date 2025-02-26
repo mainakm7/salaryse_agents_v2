@@ -21,6 +21,13 @@ chat_llm = ChatBedrock(credentials_profile_name="default",
 async def chat(state: GlobalState) -> GlobalState:
     
     query = state.get("query")
+    summary = state.get("summary", "")
+    if summary:
+        conversation_history = [summary]
+    else:
+        conversation_context = state.get("messages", [])
+        conversation_history = [msg.content for msg in conversation_context]
+    
     prompt = PromptTemplate(
         template="""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
         You are an AI assistant representing SalarySe, a professional organization. 
@@ -28,7 +35,9 @@ async def chat(state: GlobalState) -> GlobalState:
         You can also carry out general conversations.
         Use "we" to refer to SalarySe, and always maintain a respectful and informative tone.
         Ensure responses are tailored to the user's input and avoid irrelevant details.
+        The previous conversation history can be accessed through the 'conversation_history' key.
 
+        conversation_history: {conversation_history}
         Query: {query}
         Response:
         <|eot_id|><|start_header_id|>assistant<|end_header_id|>""",
@@ -37,13 +46,13 @@ async def chat(state: GlobalState) -> GlobalState:
     
     chat_chain = prompt | chat_llm | StrOutputParser()
     try:
-        generation = await chat_chain.ainvoke({"query": query})
+        generation = await chat_chain.ainvoke({"query": query, "conversation_history": conversation_history})
     except Exception as e:
         generation = f"I'm sorry, an error occurred while generating the response: {str(e)}"
         
     updated_state = state.copy()
     updated_state["generation"] = generation.strip()
-    updated_state["messages"] = AIMessage(content=generation.strip())
+    updated_state["messages"] = [AIMessage(content=generation.strip())]
     return updated_state
 
 workflow = StateGraph(GlobalState)
@@ -51,11 +60,11 @@ workflow.add_node("chat", chat)
 workflow.set_entry_point("chat")
 workflow.add_edge("chat", END)
 inmemory = MemorySaver()
-chat_agent = workflow.compile()
+chat_agent = workflow.compile(checkpointer=inmemory)
 
 if __name__ == "__main__":
     query = "How are you today?"
     query_input = {"messages": [HumanMessage(content=query)], "query": query}
-
-    response = asyncio.run(chat_agent.ainvoke(query_input))
+    config = {"configurable": {"thread_id": "1"}}
+    response = asyncio.run(chat_agent.ainvoke(query_input, config=config))
     print(response["messages"][-1].content)

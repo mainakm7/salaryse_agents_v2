@@ -1,15 +1,26 @@
-from graphbuilder import ss_agent
+from graphbuilder import ss_agent, asqlmemory
 from fastapi import FastAPI, status, HTTPException
 from pydantic import BaseModel, Field
 from fastapi.concurrency import run_in_threadpool
 from langchain_core.messages import HumanMessage
 import asyncio
+from contextlib import asynccontextmanager
 
 app = FastAPI()
 
 class AppInput(BaseModel):
     thread_id: str = Field("1", description="Thread ID for the current user session.")
     query: str = Field(..., description="User query for the SalarySe assistant.")
+    
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Opening SQLite connection.")
+    memory = await asqlmemory
+    try:
+        yield
+    finally:
+        print("Closing SQLite connection.")
+        await memory.conn.close()
 
 @app.post("/ask", status_code=status.HTTP_201_CREATED)
 async def ask_agent(input: AppInput):

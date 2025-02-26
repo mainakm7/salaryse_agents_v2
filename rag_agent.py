@@ -60,6 +60,7 @@ async def generate(state: GlobalState) -> GlobalState:
     """
     query = state["query"]
     documents = state["documents"]
+    conversation_history = state.get("messages", [])
 
     context = "\n\n".join(documents) if documents else "No relevant context available."
 
@@ -70,8 +71,10 @@ async def generate(state: GlobalState) -> GlobalState:
         Provide clear and concise answers with a maximum of 10 lines. 
         If the information is not available or unclear, respond with "I'm sorry, I don't have that information." 
         Tailor responses to maintain a professional and informative tone.
-        
-        query: {query}
+        You can access the previous conversation history through the 'messages' key in the state.
+
+        Query: {query}
+        Messages: {messages}
         Context: {context}
         Answer:
         <|eot_id|><|start_header_id|>assistant<|end_header_id|>""",
@@ -81,13 +84,13 @@ async def generate(state: GlobalState) -> GlobalState:
     rag_chain = prompt | llm | StrOutputParser()
 
     try:
-        generation = await rag_chain.ainvoke({"context": context, "query": query})
+        generation = await rag_chain.ainvoke({"context": context, "query": query, "messages": conversation_history})
     except Exception as e:
         generation = f"I'm sorry, an error occurred while generating the response: {str(e)}"
 
     updated_state = state.copy()
     updated_state["generation"] = generation.strip()
-    updated_state["messages"] = AIMessage(content=generation.strip())
+    updated_state["messages"] = [AIMessage(content=generation.strip())]
     return updated_state
 
 
@@ -102,13 +105,14 @@ workflow.add_edge("retrieve", "generate")
 
 workflow.add_edge("generate", END)
 
-rag_agent = workflow.compile()
+inmemory = MemorySaver()
+rag_agent = workflow.compile(checkpointer=inmemory)
 
 if __name__ == "__main__":
     query = "RBL card blocked"
     initial_state = GlobalState({"query": query})
-
-    final_state = asyncio.run(rag_agent.ainvoke(initial_state))
+    config = {"configurable": {"thread_id": "1"}}
+    final_state = asyncio.run(rag_agent.ainvoke(initial_state, config=config))
     print("retrived docs: \n")
     for doc in final_state.get("documents", "No response generated."):
         print("\n",doc)
