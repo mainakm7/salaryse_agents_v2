@@ -1,24 +1,30 @@
 # SalarySe_Agents_v2
 
-An AI agent system built with FastAPI and open-source LLMs, supporting RAG-based answering and general conversation capabilities. The project provides a modular and extensible architecture for various AI workflows.
+An AI agent system built with FastAPI and open-source LLMs, supporting API calling, RAG-based answering, and general conversation capabilities. The project provides a modular and extensible architecture for various AI workflows.
+
+If the response is returning an API, the string will be stored in a key called 'api'.
 
 ## Architecture
 
 ### Project Structure
 ```
 root/
-├── data/               # data folder for rag_files in .csv format
-├── manager_agent.py     # Manager LLM for routing queries to worker agents
-├── worker_agents.py       # Different specialized worker agents
-├── graphbuilder.py      # LangGraph-based AI workflow management
-└── ai_app.py           # FastAPI backend implementation
+├── data/               # Data folder for RAG files in .csv format.
+├── metadata/           # Data folder for RAG files in .csv format after metadata tagging.
+├── api_agents/         # Different API worker agents. Each specializes in different products.
+├── manager_agent.py    # Manager LLM for routing queries to worker agents.
+├── worker_agents.py    # Different specialized worker agents.
+├── api_manager.py      # A sub-manager LLM for routing API-based queries to different sub-workers specializing in different product APIs.
+├── graphbuilder.py     # LangGraph-based AI workflow management.
+└── ai_app.py           # FastAPI backend implementation.
 ```
 
 ### Components
-- **Manager Agent**: Routes incoming queries to appropriate worker agents (RAG, database, chat)
-- **Worker Agents**: Specialized agents for different tasks
-- **LangGraph**: Manages AI workflow execution
-- **FastAPI Backend**: Provides REST API endpoints
+- **Manager Agent**: Routes incoming queries to appropriate worker agents (RAG, database, chat, API supervisor).
+- **Worker Agents**: Specialized agents for different tasks.
+- **API Worker Agents**: Specialized agents for different product APIs.
+- **LangGraph**: Manages AI workflow execution.
+- **FastAPI Backend**: Provides REST API endpoints.
 
 ## Setup
 
@@ -61,7 +67,7 @@ GROQ_API_KEY=your_groq_api_key  # Optional
 ### Model Setup
 
 #### Local Models (Ollama)
-1. Install Ollama
+1. Install Ollama.
 2. Pull required models:
    ```bash
    ollama pull gemma2:27b
@@ -79,7 +85,7 @@ llm = ChatBedrock(credentials_profile_name="your_profile_name")
 
 ### Data
 
-The rag_data files should be stored in a sub direcotry called data in .csv format for proper loading
+The RAG data files should be stored in a subdirectory called `data` in `.csv` format for proper loading.
 
 ### Vector Store Setup
 
@@ -108,46 +114,46 @@ Send queries as JSON to the endpoint:
 ```json
 {
     "query": "Your query here",
-    "thread_id": "user_thread_id"  // defaults to 1 if not provided
+    "thread_id": "user_thread_id"  // Defaults to 1 if not provided
 }
 ```
 
 ## Vector Store Options
 
 ### DocumentDB (Default)
-- Used as primary vector store
-- Requires AWS configuration
-- Suitable for production deployments
+- Used as the primary vector store.
+- Requires AWS configuration.
+- Suitable for production deployments.
 
 ### ChromaDB (Alternative)
-- Local storage option
-- Good for development and testing
-- No cloud dependencies
+- Local storage option.
+- Good for development and testing.
+- No cloud dependencies.
 
 ## Deployment Options
 
 ### Local Development
-- Follow the setup instructions above
-- Suitable for testing and development
+- Follow the setup instructions above.
+- Suitable for testing and development.
 
 ### Groq Deployment
-1. Add Groq API key to `.env`
-2. Configure hardware-specific settings in `ai_app.py`
-3. Deploy using standard Groq deployment procedures
+1. Add Groq API key to `.env`.
+2. Configure hardware-specific settings in `ai_app.py`.
+3. Deploy using standard Groq deployment procedures.
 
 ## Error Handling
 
 The system includes robust error handling for:
-- Invalid API keys
-- Model loading failures
-- Vector store connection issues
-- Query processing errors
+- Invalid API keys.
+- Model loading failures.
+- Vector store connection issues.
+- Query processing errors.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+1. Fork the repository.
+2. Create a feature branch.
+3. Submit a pull request.
 
 ## License
 
@@ -155,8 +161,9 @@ This project is licensed under the Apache License.
 
 ## Future Roadmap
 
-- Multi-modal support
-- Additional LLM integrations
-- Enhanced RAG capabilities
-- Performance optimizations
-- Frontend development
+- Multi-modal support.
+- Additional LLM integrations.
+- Enhanced RAG capabilities.
+- Performance optimizations.
+- Frontend development.
+
