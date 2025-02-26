@@ -1,29 +1,47 @@
-from graphbuilder import ss_agent, asqlmemory
-from fastapi import FastAPI, status, HTTPException
+from graphbuilder import workflow
+from fastapi import FastAPI, status, HTTPException, Depends
 from pydantic import BaseModel, Field
 from fastapi.concurrency import run_in_threadpool
 from langchain_core.messages import HumanMessage
-import asyncio
 from contextlib import asynccontextmanager
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import asyncio
+import aiosqlite
 
-app = FastAPI()
+
+async def init_memory():
+    conn = await aiosqlite.connect("db/thread_id_memory.db")
+    return AsyncSqliteSaver(conn)
 
 class AppInput(BaseModel):
     thread_id: str = Field("1", description="Thread ID for the current user session.")
     query: str = Field(..., description="User query for the SalarySe assistant.")
     
+memory = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Handles the startup and shutdown of the SQLite connection."""
+    global memory
     print("Opening SQLite connection.")
-    memory = await asqlmemory
+    memory = await init_memory()  
     try:
         yield
     finally:
         print("Closing SQLite connection.")
         await memory.conn.close()
 
+
+app = FastAPI(lifespan=lifespan)
+
+async def get_memory():
+    """Dependency to provide the initialized memory object."""
+    if memory is None:
+        raise HTTPException(status_code=500, detail="Memory not initialized.")
+    return memory
+
 @app.post("/ask", status_code=status.HTTP_201_CREATED)
-async def ask_agent(input: AppInput):
+async def ask_agent(input: AppInput, memory=Depends(get_memory)):
     """
     Endpoint to query the SalarySe assistant.
 
@@ -40,6 +58,7 @@ async def ask_agent(input: AppInput):
     config = {"configurable": {"thread_id": input.thread_id}}
 
     try:
+        ss_agent = workflow.compile(checkpointer=memory)
         response = await ss_agent.ainvoke(query_payload, config=config)
 
         if (response and 

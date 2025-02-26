@@ -48,13 +48,12 @@ inmemory = MemorySaver()
 
 async def init_memory():
     conn = await aiosqlite.connect("db/chat_memory.db")
-    memory = AsyncSqliteSaver(conn)
-    return memory
+    return AsyncSqliteSaver(conn)
 
 
-asqlmemory = asyncio.run(init_memory())
+# asqlmemory = asyncio.run(init_memory())
 
-ss_agent = workflow.compile(checkpointer=asqlmemory)
+ss_agent = workflow.compile()
 
 if __name__ == "__main__":
     query = "How do i check my credit score?"
@@ -67,7 +66,7 @@ if __name__ == "__main__":
         print(response["api"])
     except Exception as e:
         print(f"Error invoking agent: {str(e)}")
-    finally:
-        asyncio.run(asqlmemory.conn.close())
+    # finally:
+    #     asyncio.run(asqlmemory.conn.close())
 
 
