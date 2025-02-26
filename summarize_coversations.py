@@ -1,7 +1,7 @@
 from GlobalState import GlobalState
 from langchain_core.messages import RemoveMessage, AIMessage
 from dotenv import load_dotenv, find_dotenv
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_aws import ChatBedrock
 from langchain_core.prompts import PromptTemplate
 from langgraph.graph import END
@@ -22,6 +22,7 @@ async def summarize_conversations(state: GlobalState) -> GlobalState:
         You are an AI assistant proficient in summarizing conversation history.
         You will be provided with the conversation history and your task is to generate a concise summary.
         Ensure the summary captures the essence of the conversation and is clear and concise.
+        returm summary as a json object with the key 'summary'.
         The previous conversation history can be accessed through the 'messages' key in the state.
 
         messages: {messages}
@@ -30,14 +31,14 @@ async def summarize_conversations(state: GlobalState) -> GlobalState:
         input_variables=["messages"]
     )
     
-    summary_chain = prompt | summary_llm | StrOutputParser()
+    summary_chain = prompt | summary_llm | JsonOutputParser()
     messages = state.get("messages", [])
     try:
         response = await summary_chain.ainvoke({"messages": messages})
     except Exception as e:
         response = f"I'm sorry, an error occurred while generating the response: {str(e)}"
     
-    summary = response.strip()
+    summary = response["summary"].strip()
     
     updated_state = state.copy()
     updated_state["messages"] = updated_state.get("messages", []) + [AIMessage(content=summary)]
