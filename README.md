@@ -1,4 +1,4 @@
-# SalarySe_Agents_v1
+# SalarySe_Agents_v2
 
 An AI agent system built with FastAPI and open-source LLMs, supporting RAG-based answering and general conversation capabilities. The project provides a modular and extensible architecture for various AI workflows.
 
